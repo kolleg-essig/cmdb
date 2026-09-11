@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Assets – Mini-CMDB{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Assets ({{ assets|length }})</h1>
+  <a href="{{ url_for('main.asset_create') }}" class="btn btn-primary">+ Neues Asset</a>
+</div>
+
+<!-- Such- und Filterleiste (GET-Formular, damit die Werte in der URL bleiben) -->
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('main.assets') }}" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label" for="q">Suche (Name / Asset-Tag)</label>
+        <input type="search" class="form-control" id="q" name="q"
+               placeholder="z. B. Laptop oder AST-0001" value="{{ search }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="status">Status</label>
+        <select class="form-select" id="status" name="status">
+          <option value="">Alle</option>
+          {% for value, label in statuses %}
+          <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="category_id">Kategorie</label>
+        <select class="form-select" id="category_id" name="category_id">
+          <option value="">Alle</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}" {% if category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="location_id">Standort</label>
+        <select class="form-select" id="location_id" name="location_id">
+          <option value="">Alle</option>
+          {% for location in locations %}
+          <option value="{{ location.id }}" {% if location_id == location.id %}selected{% endif %}>{{ location.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary">Filtern</button>
+        <a href="{{ url_for('main.assets') }}" class="btn btn-outline-secondary">Zurücksetzen</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Asset-Tabelle -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Tag</th>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Kategorie</th>
+          <th>Standort</th>
+          <th>Zugeordnet an</th>
+          <th class="text-end">Kaufpreis</th>
+          <th class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for asset in assets %}
+        <tr>
+          <td><a href="{{ url_for('main.asset_detail', asset_id=asset.id) }}">{{ asset.asset_tag }}</a></td>
+          <td>
+            {{ asset.name }}
+            {% if asset.serial_number %}<br><small class="text-muted">SN: {{ asset.serial_number }}</small>{% endif %}
+          </td>
+          <td>{{ asset.status | status_badge }}</td>
+          <td>{{ asset.category.name if asset.category else "–" }}</td>
+          <td>{{ asset.location.name if asset.location else "–" }}</td>
+          <td>{{ asset.assignee.username if asset.assignee else "–" }}</td>
+          <td class="text-end">
+            {{ asset.purchase_cost | chf }}
+          </td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('main.asset_detail', asset_id=asset.id) }}">Details</a>
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('main.asset_edit', asset_id=asset.id) }}">Bearbeiten</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-4">
+            Keine Assets gefunden.
+            {% if search or status or category_id or location_id %}
+              <a href="{{ url_for('main.assets') }}">Filter zurücksetzen</a>
+            {% else %}
+              <a href="{{ url_for('main.asset_create') }}">Erstes Asset anlegen</a>.
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ asset.asset_tag }} – Mini-CMDB{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('main.assets') }}">Assets</a></li>
+    <li class="breadcrumb-item active">{{ asset.asset_tag }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">
+    {{ asset.name }}
+    <small class="text-muted fs-6">{{ asset.asset_tag }}</small>
+  </h1>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('main.asset_edit', asset_id=asset.id) }}" class="btn btn-primary">Bearbeiten</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Stammdaten des Assets -->
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header">Stammdaten</div>
+      <dl class="row mb-0 px-3">
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">{{ asset.status | status_badge }}</dd>
+
+        <dt class="col-sm-4">Beschreibung</dt>
+        <dd class="col-sm-8">{{ asset.description or "–" }}</dd>
+
+        <dt class="col-sm-4">Seriennummer</dt>
+        <dd class="col-sm-8">{{ asset.serial_number or "–" }}</dd>
+
+        <dt class="col-sm-4">Kategorie</dt>
+        <dd class="col-sm-8">
+          {% if asset.category %}
+            <a href="{{ url_for('main.categories') }}">{{ asset.category.name }}</a>
+          {% else %}–{% endif %}
+        </dd>
+
+        <dt class="col-sm-4">Standort</dt>
+        <dd class="col-sm-8">
+          {% if asset.location %}
+            <a href="{{ url_for('main.locations') }}">{{ asset.location.name }}
+              {% if asset.location.building or asset.location.room %}
+                <small class="text-muted">
+                  ({{ [asset.location.building, asset.location.room] | select | join(", ") }})
+                </small>
+              {% endif %}
+            </a>
+          {% else %}–{% endif %}
+        </dd>
+
+        <dt class="col-sm-4">Zugeordnet an</dt>
+        <dd class="col-sm-8">{{ asset.assignee.username if asset.assignee else "– nicht zugeordnet –" }}</dd>
+      </dl>
+    </div>
+
+    <!-- Kaufdaten -->
+    <div class="card">
+      <div class="card-header">Kaufdaten</div>
+      <dl class="row mb-0 px-3">
+        <dt class="col-sm-4">Kaufdatum</dt>
+        <dd class="col-sm-8">
+          {{ asset.purchase_date.strftime("%d.%m.%Y") if asset.purchase_date else "–" }}
+        </dd>
+        <dt class="col-sm-4">Kaufpreis</dt>
+        <dd class="col-sm-8">{{ asset.purchase_cost | chf }}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Metadaten + Löschung -->
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header">Buchhaltung</div>
+      <dl class="row mb-0 px-3">
+        <dt class="col-sm-6">Angelegt von</dt>
+        <dd class="col-sm-6">{{ asset.creator.username if asset.creator else "–" }}</dd>
+        <dt class="col-sm-6">Angelegt am</dt>
+        <dd class="col-sm-6">{{ asset.created_at.strftime("%d.%m.%Y %H:%M") }}</dd>
+        <dt class="col-sm-6">Geändert am</dt>
+        <dd class="col-sm-6">{{ asset.updated_at.strftime("%d.%m.%Y %H:%M") }}</dd>
+      </dl>
+    </div>
+
+    <!-- Löschbereich: nur Ersteller oder mit expliziter Bestätigung -->
+    <div class="card border-danger">
+      <div class="card-header text-danger">Gefahrenzone</div>
+      <div class="card-body">
+        {% if asset.created_by == current_user.id %}
+          <p class="small text-muted">Als Ersteller kannst du das Asset direkt löschen.</p>
+        {% else %}
+          <p class="small text-muted">
+            Du bist nicht der Ersteller – die Löschung muss bestätigt werden.
+          </p>
+        {% endif %}
+        <form method="post" action="{{ url_for('main.asset_delete', asset_id=asset.id) }}"
+              onsubmit="return confirm('Asset {{ asset.asset_tag }} wirklich löschen?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="confirm" value="1" id="confirmDelete">
+            <label class="form-check-label small" for="confirmDelete">
+              Ich bestätige die Löschung von {{ asset.asset_tag }}
+            </label>
+          </div>
+          <button type="submit" class="btn btn-danger">Asset löschen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

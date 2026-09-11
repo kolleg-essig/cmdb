@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Profil – Mini-CMDB{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="h4 mb-0">Mein Profil</h1>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped align-middle mb-4">
+          <tr>
+            <th scope="row" style="width: 40%;">Benutzername</th>
+            <td>{{ user.username }}</td>
+          </tr>
+          <tr>
+            <th scope="row">E-Mail</th>
+            <td>{{ user.email }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Konto erstellt</th>
+            <td>{{ user.created_at.strftime("%d.%m.%Y %H:%M Uhr") }}</td>
+          </tr>
+        </table>
+
+        <h2 class="h5">API-Key</h2>
+        <p class="text-muted">
+          Mit diesem Key kannst du die REST-API ohne Browser-Session aufrufen
+          (z. B. über <code>curl</code> oder Skripte).
+        </p>
+        <div class="input-group mb-2">
+          <input id="api-key" type="text" class="form-control font-monospace"
+                 value="{{ user.api_key }}" readonly aria-label="API-Key">
+          <button class="btn btn-outline-secondary" type="button"
+                  data-bs-clipboard-target="#api-key" onclick="copyApiKey(this)">
+            Kopieren
+          </button>
+        </div>
+        <div id="copy-feedback" class="alert alert-success py-2 d-none" role="status">
+          API-Key in die Zwischenablage kopiert.
+        </div>
+        <p class="text-warning small mb-0">
+          <strong>Achtung:</strong> Behandle den API-Key wie ein Passwort –
+          er gibt vollen API-Zugriff auf dein Konto.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // API-Key mit einem Klick in die Zwischenablage kopieren
+  function copyApiKey(button) {
+    const input = document.getElementById("api-key");
+    const feedback = document.getElementById("copy-feedback");
+    navigator.clipboard.writeText(input.value).then(() => {
+      feedback.classList.remove("d-none");
+      setTimeout(() => feedback.classList.add("d-none"), 2000);
+    });
+  }
+</script>
+{% endblock %}

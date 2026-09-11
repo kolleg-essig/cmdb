@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Anmelden – Mini-CMDB{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <div class="card-body p-4">
+    <h1 class="h3 mb-3">Anmelden</h1>
+
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <ul class="mb-0">
+          {% for field, errors in form.errors.items() %}
+            {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}  <!-- CSRF-Token -->
+
+      <div class="mb-3">
+        {{ form.username.label(class="form-label") }}
+        {{ form.username(class="form-control", autofocus=true) }}
+      </div>
+
+      <div class="mb-3">
+        {{ form.password.label(class="form-label") }}
+        {{ form.password(class="form-control") }}
+      </div>
+
+      <div class="mb-3 form-check">
+        {{ form.remember_me(class="form-check-input") }}
+        {{ form.remember_me.label(class="form-check-label") }}
+      </div>
+
+      <button type="submit" class="btn btn-primary">Anmelden</button>
+    </form>
+
+    <hr>
+    <p class="mb-0">
+      Noch kein Konto?
+      <a href="{{ url_for('auth.register') }}">Registrieren</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Standorte – Mini-CMDB{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Standorte</h1>
+
+<div class="row g-4">
+  <!-- Liste aller Standorte -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Gebäude</th>
+              <th>Raum</th>
+              <th class="text-center">Assets</th>
+              <th class="text-end">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for location in locations %}
+            <tr>
+              <td>{{ location.name }}</td>
+              <td>{{ location.building or "–" }}</td>
+              <td>{{ location.room or "–" }}</td>
+              <td class="text-center">
+                <span class="badge bg-{% if location.assets %}primary{% else %}secondary{% endif %}">
+                  {{ location.assets|length }}
+                </span>
+              </td>
+              <td class="text-end">
+                <!-- Löschen nur möglich, wenn keine Assets zugewiesen sind -->
+                <form method="post" action="{{ url_for('main.location_delete', location_id=location.id) }}"
+                      onsubmit="return confirm('Standort '{{ location.name|e }}' wirklich löschen?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"
+                          {% if location.assets %}disabled title="Solange Assets zugewiesen sind, kann der Standort nicht gelöscht werden"{% endif %}>
+                    Löschen
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">Noch keine Standorte angelegt.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline-Formular zum Erstellen neuer Standorte -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Neuer Standort</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.locations') }}">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.name.id }}">Name <span class="text-danger">*</span></label>
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+            {% for error in form.name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="{{ form.building.id }}">Gebäude</label>
+              {{ form.building(class="form-control") }}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label" for="{{ form.room.id }}">Raum</label>
+              {{ form.room(class="form-control") }}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Standort anlegen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

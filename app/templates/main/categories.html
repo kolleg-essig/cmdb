@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Kategorien – Mini-CMDB{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Kategorien</h1>
+
+<div class="row g-4">
+  <!-- Liste aller Kategorien -->
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Beschreibung</th>
+              <th class="text-center">Assets</th>
+              <th class="text-end">Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for category in categories %}
+            <tr>
+              <td>{{ category.name }}</td>
+              <td class="text-muted">{{ category.description or "–" }}</td>
+              <td class="text-center">
+                <span class="badge bg-{% if category.assets %}primary{% else %}secondary{% endif %}">
+                  {{ category.assets|length }}
+                </span>
+              </td>
+              <td class="text-end">
+                <!-- Löschen nur möglich, wenn keine Assets zugewiesen sind -->
+                <form method="post" action="{{ url_for('main.category_delete', category_id=category.id) }}"
+                      onsubmit="return confirm('Kategorie '{{ category.name|e }}' wirklich löschen?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"
+                          {% if category.assets %}disabled title="Solange Assets zugewiesen sind, kann die Kategorie nicht gelöscht werden"{% endif %}>
+                    Löschen
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">Noch keine Kategorien angelegt.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inline-Formular zum Erstellen neuer Kategorien -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Neue Kategorie</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.categories') }}">
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.name.id }}">Name <span class="text-danger">*</span></label>
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+            {% for error in form.name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.description.id }}">Beschreibung</label>
+            {{ form.description(rows=3, class="form-control") }}
+          </div>
+          <button type="submit" class="btn btn-primary">Kategorie anlegen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
